@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DATA DETECTIVE</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Prompt:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #050b14;
+            --neon-blue: #00F0FF;
+            --neon-purple: #8A2BE2;
+            --neon-red: #FF0055;
+            --neon-green: #00FF66;
+            --glass-bg: rgba(10, 20, 40, 0.6);
+            --glass-border: rgba(0, 240, 255, 0.3);
+        }
+
+        body {
+            font-family: 'Prompt', sans-serif;
+            background-color: var(--bg-color);
+            color: white;
+            overflow-x: hidden;
+            background-image: 
+                linear-gradient(rgba(0, 240, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 240, 255, 0.05) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        h1, h2, h3, .cyber-font {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* Glassmorphism Classes */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        /* Neon Effects */
+        .neon-text-blue { text-shadow: 0 0 5px var(--neon-blue), 0 0 15px var(--neon-blue); color: var(--neon-blue); }
+        .neon-text-purple { text-shadow: 0 0 5px var(--neon-purple), 0 0 15px var(--neon-purple); color: #d4a5ff; }
+        .neon-text-red { text-shadow: 0 0 5px var(--neon-red), 0 0 15px var(--neon-red); color: #ff99bb; }
+        
+        .neon-border-blue {
+            border: 1px solid var(--neon-blue);
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.5), inset 0 0 10px rgba(0, 240, 255, 0.2);
+        }
+        
+        .neon-border-purple {
+            border: 1px solid var(--neon-purple);
+            box-shadow: 0 0 10px rgba(138, 43, 226, 0.5), inset 0 0 10px rgba(138, 43, 226, 0.2);
+        }
+
+        /* Buttons */
+        .cyber-btn {
+            background: rgba(0, 240, 255, 0.1);
+            border: 1px solid var(--neon-blue);
+            color: var(--neon-blue);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            overflow: hidden;
+        }
+        .cyber-btn:hover {
+            background: var(--neon-blue);
+            color: var(--bg-color);
+            box-shadow: 0 0 20px var(--neon-blue);
+        }
+        .cyber-btn:active { transform: scale(0.95); }
+
+        /* Logic Grid */
+        .logic-grid {
+            display: grid;
+            gap: 2px;
+            background-color: var(--glass-border);
+            border: 2px solid var(--neon-blue);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .grid-header { background: rgba(0, 240, 255, 0.2); font-weight: bold; text-align: center; padding: 10px; font-size: 0.8rem;}
+        .grid-cell {
+            background: rgba(10, 20, 40, 0.9);
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.5rem;
+            transition: background 0.2s;
+        }
+        .grid-cell:hover { background: rgba(0, 240, 255, 0.1); }
+        .grid-cell.marked-x { color: var(--neon-red); }
+        .grid-cell.marked-o { color: var(--neon-green); text-shadow: 0 0 10px var(--neon-green); font-weight: bold;}
+
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        
+        @keyframes pulse-scan {
+            0% { box-shadow: 0 0 0 0 rgba(0, 240, 255, 0.4); }
+            70% { box-shadow: 0 0 0 20px rgba(0, 240, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 240, 255, 0); }
+        }
+        .animate-scan { animation: pulse-scan 2s infinite; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.5); }
+        ::-webkit-scrollbar-thumb { background: var(--neon-blue); border-radius: 4px; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col text-sm md:text-base">
+
+    <!-- Top HUD (Visible during map and game) -->
+    <header id="hud" class="hidden glass-panel m-4 p-4 flex justify-between items-center z-50 relative">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-full border-2 border-cyan-400 flex items-center justify-center bg-cyan-900 overflow-hidden cursor-pointer" onclick="showProfile()">
+                <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Detective" alt="Avatar" class="w-full h-full object-cover">
+            </div>
+            <div>
+                <div class="cyber-font text-cyan-400 text-lg font-bold" id="hud-rank">🔰 Rookie</div>
+                <div class="text-xs text-gray-400">Score: <span id="hud-score" class="text-white font-bold">0</span></div>
+            </div>
+        </div>
+        <div class="flex items-center gap-6">
+            <div class="text-xl" id="hud-hearts">❤️❤️❤️</div>
+            <button onclick="goToMenu()" class="text-gray-400 hover:text-white transition">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Custom Alert/Modal System -->
+    <div id="custom-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+        <div class="glass-panel neon-border-blue p-8 max-w-md w-full text-center animate-fade-in relative">
+            <div id="modal-icon" class="text-5xl mb-4">ℹ️</div>
+            <h2 id="modal-title" class="text-2xl cyber-font text-cyan-400 mb-4">Notification</h2>
+            <div id="modal-body" class="text-gray-300 mb-6 font-light leading-relaxed">Message goes here.</div>
+            <button id="modal-btn" class="cyber-btn w-full py-3 rounded font-bold" onclick="closeModal()">ACKNOWLEDGE</button>
+        </div>
+    </div>
+
+    <main id="screen-menu" class="flex-1 flex flex-col items-center justify-center p-4 relative z-10">
+        <div class="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
+            <div class="w-[80vw] h-[80vw] rounded-full border border-cyan-400 animate-[spin_60s_linear_infinite]"></div>
+            <div class="w-[60vw] h-[60vw] rounded-full border border-purple-400 absolute animate-[spin_40s_linear_infinite_reverse]"></div>
+        </div>
+        
+        <div class="text-center mb-12 animate-fade-in">
+            <div class="text-6xl mb-4 animate-bounce">🕵️‍♂️</div>
+            <h1 class="text-5xl md:text-7xl font-black cyber-font neon-text-blue mb-2 tracking-wider">DATA<br>DETECTIVE</h1>
+            <p class="text-purple-300 tracking-widest text-sm md:text-base neon-text-purple">"ทุกข้อมูลมีความจริงซ่อนอยู่"</p>
+        </div>
+
+        <div class="flex flex-col gap-4 w-full max-w-xs animate-fade-in" style="animation-delay: 0.2s;">
+            <button onclick="showScreen('screen-map')" class="cyber-btn py-4 rounded-lg font-bold text-lg animate-scan">
+                ▶ START INVESTIGATION
+            </button>
+            <button onclick="showProfile()" class="cyber-btn py-3 rounded-lg font-bold">
+                👤 PLAYER PROFILE
+            </button>
+            <button onclick="showHowToPlay()" class="cyber-btn py-3 rounded-lg font-bold">
+                📖 HOW TO PLAY
+            </button>
+        </div>
+    </main>
+
+    <main id="screen-map" class="hidden flex-1 flex flex-col p-4 md:p-8 relative z-10 max-w-5xl mx-auto w-full">
+        <h2 class="text-3xl cyber-font neon-text-blue mb-8 border-b border-cyan-800 pb-4">📁 DATA ARCHIVE: CASE FILES</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto pb-20" id="case-list">
+            <!-- Cases generated by JS -->
+        </div>
+    </main>
+
+    <main id="screen-game" class="hidden flex-1 flex flex-col p-4 max-w-6xl mx-auto w-full z-10">
+        
+        <!-- Game Header: Title & Timer -->
+        <div class="glass-panel p-4 mb-4 flex justify-between items-center neon-border-blue">
+            <div>
+                <h2 id="game-case-title" class="text-2xl cyber-font neon-text-blue">CASE 01: Missing Laptop</h2>
+                <p id="game-case-desc" class="text-gray-400 text-sm mt-1">Desc</p>
+            </div>
+            <div class="text-right">
+                <div class="text-xs text-gray-400 cyber-font">TIME REMAINING</div>
+                <div id="game-timer" class="text-3xl cyber-font text-cyan-400 font-bold tracking-widest">05:00</div>
+            </div>
+        </div>
+
+        <div class="flex flex-col lg:flex-row gap-6 flex-1 h-full">
+            
+            <!-- Left Panel: Clues & Tools -->
+            <div class="lg:w-1/3 flex flex-col gap-4">
+                <div class="glass-panel p-5 flex-1 flex flex-col">
+                    <h3 class="text-lg font-bold text-purple-400 border-b border-purple-800 pb-2 mb-4 flex justify-between items-center">
+                        <span>🔍 COLLECTED CLUES</span>
+                        <button onclick="useHint()" class="bg-purple-900/50 hover:bg-purple-800 text-purple-200 text-xs px-2 py-1 rounded border border-purple-500 transition">Get Hint (-50 pt)</button>
+                    </h3>
+                    <ul id="clues-list" class="space-y-3 overflow-y-auto flex-1 pr-2">
+                        <!-- Clues injected here -->
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Right Panel: Investigation Workspace (Logic Grid) -->
+            <div class="lg:w-2/3 glass-panel p-4 md:p-6 flex flex-col">
+                <div class="flex justify-between items-end mb-4 border-b border-cyan-800 pb-2">
+                    <h3 class="text-lg font-bold text-cyan-400">🧠 INVESTIGATION GRID</h3>
+                    <div class="flex gap-4 text-sm text-gray-400">
+                        <span class="flex items-center gap-1"><span class="text-neon-red font-bold text-lg">X</span> ไม่ใช่</span>
+                        <span class="flex items-center gap-1"><span class="text-neon-green font-bold text-lg">O</span> ใช่/เชื่อมโยง</span>
+                    </div>
+                </div>
+                
+                <div class="flex-1 flex items-center justify-center overflow-auto p-2">
+                    <!-- Logic Grid Container -->
+                    <div id="logic-grid-container" class="logic-grid">
+                        <!-- Grid injected here -->
+                    </div>
+                </div>
+                
+                <div class="mt-6 flex justify-end">
+                    <button onclick="submitSolution()" class="cyber-btn py-3 px-8 rounded font-bold text-lg animate-scan">
+                        🔎 SOLVE CASE
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // --- Web Audio API ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+            
+            switch(type) {
+                case 'click':
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(800, now);
+                    osc.frequency.exponentialRampToValueAtTime(300, now + 0.1);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.linearRampToValueAtTime(0, now + 0.1);
+                    osc.start(now); osc.stop(now + 0.1);
+                    break;
+                case 'mark-x':
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(200, now);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.linearRampToValueAtTime(0, now + 0.1);
+                    osc.start(now); osc.stop(now + 0.1);
+                    break;
+                case 'mark-o':
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(600, now);
+                    osc.frequency.setValueAtTime(800, now + 0.05);
+                    gain.gain.setValueAtTime(0.05, now);
+                    gain.gain.linearRampToValueAtTime(0, now + 0.1);
+                    osc.start(now); osc.stop(now + 0.1);
+                    break;
+                case 'win':
+                    osc.type = 'sine';
+                    [440, 554, 659, 880].forEach((freq, i) => {
+                        const t = now + (i * 0.1);
+                        osc.frequency.setValueAtTime(freq, t);
+                    });
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.linearRampToValueAtTime(0, now + 0.5);
+                    osc.start(now); osc.stop(now + 0.5);
+                    break;
+                case 'error':
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, now);
+                    osc.frequency.linearRampToValueAtTime(100, now + 0.3);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.linearRampToValueAtTime(0, now + 0.3);
+                    osc.start(now); osc.stop(now + 0.3);
+                    break;
+            }
+        }
+
+        // --- Game Data ---
+        let player = {
+            score: 0,
+            casesSolved: 0,
+            hearts: 3,
+            rank: "🔰 Rookie",
+            unlockedCaseId: 1
+        };
+
+        const ranks = [
+            { threshold: 0, title: "🔰 Rookie" },
+            { threshold: 1, title: "🔎 Investigator" },
+            { threshold: 2, title: "🕵️ Detective" },
+            { threshold: 3, title: "🧠 Master Detective" },
+            { threshold: 4, title: "👑 Data Master" }
+        ];
+
+        // Core Case Logic Data
+        const cases = [
+            {
+                id: 1,
+                title: "CASE 01 — Missing Laptop 💻",
+                difficulty: "Easy",
+                desc: "มีนักเรียน 3 คน (นนท์, มิน, ฟ้า) และแล็ปท็อป 3 เครื่อง (A, B, C) จงหาว่าใครใช้เครื่องไหน?",
+                timeLimit: 180, // seconds
+                rows: ["นนท์ (Nont)", "มิน (Min)", "ฟ้า (Fah)"],
+                cols: ["Laptop A", "Laptop B", "Laptop C"],
+                clues: [
+                    "มิน (Min) ไม่ได้ใช้เครื่อง A",
+                    "ฟ้า (Fah) เป็นคนเดียวที่ใช้เครื่อง C",
+                    "นนท์ (Nont) ไม่ได้ใช้เครื่อง B"
+                ],
